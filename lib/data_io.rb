@@ -98,7 +98,7 @@ class DataIO
     end
   end
 
-  # Internal: Getter method that returns a tuple of file handles from 
+  # Internal: Getter method that returns a tuple of file handles from
   # @output_file_ios when given a sample index key.
   #
   # key - Sample index Integer key used for lookup.
@@ -183,7 +183,7 @@ class DataIO
     input_files << fastq_files.grep(/_R2_/).first
 
     unless input_files.compact.size == 4
-      fail DataIOError, "Expecting exactly 4 input_files but got: " \
+      fail DataIOError, 'Expecting exactly 4 input_files but got: ' \
                         "#{input_files.compact.size}"
     end
 
