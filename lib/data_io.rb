@@ -21,34 +21,55 @@
 #                                                                              #
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
+# Error class for all errors to do with DataIO.
+DataIOError = Class.new(StandardError)
+
 # Class containing methods for reading and write FASTQ data files.
 class DataIO
+  # Internal: Constructor method for DataIO objects.
+  #
+  # samples     - Array with Sample objects consisting id, index1 and index2
+  # fastq_files - Array of Strings with FASTQ file names of multiplexed data.
+  # compress    - Symbol indicating if output data should be compressed with
+  #               either gzip or bzip2.
+  # output_dir  - String with path of output directory.
+  #
+  # Returns DataIO object.
   def initialize(samples, fastq_files, compress, output_dir)
-    @samples      = samples
-    @compress     = compress
-    @output_dir   = output_dir
-    @suffix1      = extract_suffix(fastq_files.grep(/_R1_/).first)
-    @suffix2      = extract_suffix(fastq_files.grep(/_R2_/).first)
-    @input_files  = identify_input_files(fastq_files)
-    @undetermined = @samples.size + 1
-    @file_hash    = nil
+    @samples         = samples
+    @compress        = compress
+    @output_dir      = output_dir
+    @suffix1         = extract_suffix(fastq_files, '_R1_')
+    @suffix2         = extract_suffix(fastq_files, '_R2_')
+    @input_files     = identify_input_files(fastq_files)
+    @undetermined    = @samples.size + 1
+    @output_file_ios = nil
   end
 
-  # Method that extracts the Sample, Lane, Region information from a given file.
+  # Method that extracts the Sample, Lane, Region information from given files.
   #
-  # file - String with file name.
+  # files   - Array with FASTQ file names as Strings.
+  # pattern - String with pattern to use for matching file names.
   #
   # Examples
   #
-  #   extract_suffix("Sample1_S1_L001_R1_001.fastq.gz")
+  #   extract_suffix("Sample1_S1_L001_R1_001.fastq.gz", "_R1_")
   #   # => "_S1_L001_R1_001"
   #
   # Returns String with SLR info.
-  def extract_suffix(file)
-    if file =~ /.+(_S\d_L\d{3}_R[12]_\d{3}).+$/
+  # Raises unless pattern match exactly 1 file.
+  # Raises unless SLR info can be parsed.
+  def extract_suffix(files, pattern)
+    hits = files.grep(Regexp.new(pattern))
+
+    unless hits.size == 1
+      fail DataIOError, "Expecting exactly 1 hit but got: #{hits.join(', ')}"
+    end
+
+    if hits.first =~ /.+(_S\d_L\d{3}_R[12]_\d{3}).+$/
       slr = Regexp.last_match(1)
     else
-      fail "Unable to parse file SLR from: #{file}"
+      fail DataIOError, "Unable to parse file SLR from: #{hits.first}"
     end
 
     append_suffix(slr)
@@ -104,10 +125,10 @@ class DataIO
   #
   # Returns an Array with IO objects (file handles).
   def open_input_files
-    @file_ios = []
+    @input_file_ios = []
 
     @input_files.each do |input_file|
-      @file_ios << BioPieces::Fastq.open(input_file)
+      @input_file_ios << BioPieces::Fastq.open(input_file)
     end
 
     yield self
@@ -119,18 +140,20 @@ class DataIO
   #
   # Returns nothing.
   def close_input_files
-    @file_ios.map(&:close)
+    @input_file_ios.map(&:close)
   end
 
   # Method that reads a Seq entry from each of the file handles in the
-  # @file_ios Array. Iteration stops when no more Seq entries are found.
+  # @input_file_ios Array. Iteration stops when no more Seq entries are found.
   #
   # Yields an Array with 4 Seq objects.
   #
   # Returns nothing
   def each
     loop do
-      entries = @file_ios.each_with_object([]) { |e, a| a << e.next_entry }
+      entries = @input_file_ios.each_with_object([]) do |e, a|
+        a << e.next_entry
+      end
 
       break if entries.compact.size != 4
 
@@ -143,11 +166,11 @@ class DataIO
   # Yeilds a Hash with an incrementing index as keys, and a tuple of file
   # handles as values.
   def open_output_files
-    @file_hash = {}
-    comp       = @compress
+    @output_file_ios = {}
+    comp             = @compress
 
-    @file_hash.merge!(open_output_files_samples(comp))
-    @file_hash.merge!(open_output_files_undet(comp))
+    @output_file_ios.merge!(open_output_files_samples(comp))
+    @output_file_ios.merge!(open_output_files_undet(comp))
 
     yield self
   ensure
@@ -155,17 +178,17 @@ class DataIO
   end
 
   def close_output_files
-    @file_hash.each_value { |value| value.map(&:close) }
+    @output_file_ios.each_value { |value| value.map(&:close) }
   end
 
-  # Getter method that returns a tuple of file handles from @file_hash when
-  # given a key.
+  # Getter method that returns a tuple of file handles from @output_file_ios
+  # when given a key.
   #
   # key - Key used to lookup
   #
   # Returns Array with a tuple of IO objects.
   def [](key)
-    @file_hash[key]
+    @output_file_ios[key]
   end
 
   # Method that opens the sample output files for writing.
@@ -175,17 +198,17 @@ class DataIO
   # Returns a Hash with an incrementing index as keys, and a tuple of file
   # handles as values.
   def open_output_files_samples(comp)
-    file_hash = {}
+    output_file_ios = {}
 
     @samples.each_with_index do |sample, i|
       file_forward = File.join(@output_dir, "#{sample.id}#{@suffix1}")
       file_reverse = File.join(@output_dir, "#{sample.id}#{@suffix2}")
       io_forward   = BioPieces::Fastq.open(file_forward, 'w', compress: comp)
       io_reverse   = BioPieces::Fastq.open(file_reverse, 'w', compress: comp)
-      file_hash[i] = [io_forward, io_reverse]
+      output_file_ios[i] = [io_forward, io_reverse]
     end
 
-    file_hash
+    output_file_ios
   end
 
   # Method that opens the undertermined output files for writing.
@@ -195,13 +218,13 @@ class DataIO
   # Returns a Hash with an incrementing index as keys, and a tuple of file
   # handles as values.
   def open_output_files_undet(comp)
-    file_hash    = {}
+    output_file_ios    = {}
     file_forward = File.join(@output_dir, "Undetermined#{@suffix1}")
     file_reverse = File.join(@output_dir, "Undetermined#{@suffix2}")
     io_forward   = BioPieces::Fastq.open(file_forward, 'w', compress: comp)
     io_reverse   = BioPieces::Fastq.open(file_reverse, 'w', compress: comp)
-    file_hash[@undetermined] = [io_forward, io_reverse]
+    output_file_ios[@undetermined] = [io_forward, io_reverse]
 
-    file_hash
+    output_file_ios
   end
 end

@@ -22,6 +22,7 @@
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
 require 'pp'
+require 'fileutils'
 require 'tempfile'
 require 'demultiplexer'
 require 'test/unit'
