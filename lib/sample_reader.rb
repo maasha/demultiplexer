@@ -120,7 +120,7 @@ class SampleReader
     CSV.read(file, col_sep: "\t").each do |id, index1, index2|
       next if id[0] == '#'
 
-      samples << Sample.new(id, index1, index2)
+      samples << Sample.new(id, index1.upcase, index2.upcase)
     end
 
     samples
