@@ -30,7 +30,7 @@ SampleReaderError = Class.new(StandardError)
 
 # Class containing methods for reading and checking sample information.
 class SampleReader
-  # Public: Class method that reads sample information from a samples file,
+  # Internal: Class method that reads sample information from a samples file,
   # which consists of ASCII text in three tab separated columns: The first
   # column is the sample_id, the second column is index1 and the third column is
   # index2.
@@ -53,8 +53,8 @@ class SampleReader
     sample_reader.samples_parse(file)
   end
 
-  # Constructor method for SampleReader object. The given revcomp1 and revcomp2
-  # flags are stored as instance variables.
+  # Internal: Constructor method for SampleReader object. The given revcomp1 and
+  # revcomp2 flags are stored as instance variables.
   #
   # revcomp1 - Flag indicating that index1 should be reverse-complemented.
   # revcomp2 - Flag indicating that index2 should be reverse-complemented.
@@ -70,9 +70,9 @@ class SampleReader
     @revcomp2 = revcomp2
   end
 
-  # Method that reads sample information from a samples file, which consists
-  # of ASCII text in three tab separated columns: The first column is the
-  # sample_id, the second column is index1 and the third column is index2.
+  # Internal: Method that reads sample information from a samples file, which
+  # consists of ASCII text in three tab separated columns: The first column is
+  # the sample_id, the second column is index1 and the third column is index2.
   #
   # file - String with path to sample file.
   #
@@ -99,9 +99,9 @@ class SampleReader
 
   private
 
-  # Method that reads sample information form a samples file, which consists
-  # of ASCII text in three tab separated columns: The first column is the
-  # sample_id, the second column is index1 and the third column is index2.
+  # Internal: Method that reads sample information form a samples file, which
+  # consists of ASCII text in three tab separated columns: The first column is
+  # the sample_id, the second column is index1 and the third column is index2.
   #
   # If @options[:revcomp_index1] or @options[:revcomp_index2] is set then
   # index1 and index2 are reverse-complemented accordingly.
@@ -126,8 +126,8 @@ class SampleReader
     samples
   end
 
-  # Method that iterates over the a given Array of sample Objects, and if
-  # @options[:revcomp_index1] or @options[:revcomp_index2] is set then
+  # Internal: Method that iterates over the a given Array of sample Objects,
+  # and if @options[:revcomp_index1] or @options[:revcomp_index2] is set then
   # index1 and index2 are reverse-complemented accordingly.
   #
   # samples - Array of Sample objects.
@@ -149,9 +149,9 @@ class SampleReader
     BioPieces::Seq.new(seq: index, type: :dna).reverse.complement.seq
   end
 
-  # Method that iterates over the a given Array of sample Objects, and if
-  # the combination of index1 and index2 is non-unique an error is pushed
-  # on an error Array.
+  # Internal: Method that iterates over the a given Array of sample Objects,
+  # and if the combination of index1 and index2 is non-unique an error is
+  # pushed on an error Array.
   #
   # samples - Array of Sample objects.
   #
@@ -171,8 +171,8 @@ class SampleReader
     errors
   end
 
-  # Method that iterates over the a given Array of sample Objects, and if
-  # a sample id is non-unique an error is pushed  on an error Array.
+  # Internal: Method that iterates over the a given Array of sample Objects,
+  # and if a sample id is non-unique an error is pushed on an error Array.
   #
   # samples - Array of Sample objects.
   #
@@ -192,7 +192,7 @@ class SampleReader
     errors
   end
 
-  # Struct for holding sample information.
+  # Internal: Struct for holding sample information.
   #
   # id     - Sample id.
   # index1 - Index1 sequence.
@@ -205,7 +205,7 @@ class SampleReader
   #
   # Returns Sample object.
   Sample = Struct.new(:id, :index1, :index2) do
-    # Method that returns a String representaion of a Sample object.
+    # Internal: Method that returns a String representaion of a Sample object.
     #
     # Examples
     #

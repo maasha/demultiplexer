@@ -26,7 +26,7 @@ IndexBuilderError = Class.new(StandardError)
 
 # Class containing methods for building an search index.
 class IndexBuilder
-  # Public: Class method that build a search index from a given Array of
+  # Internal: Class method that build a search index from a given Array of
   # samples. The index consists of a Google Hash, which don't have Ruby's
   # garbage collection and therefore is much more efficient. The Hash keys
   # consists of index1 and index2 concatenated, and furthermore, if
@@ -48,8 +48,8 @@ class IndexBuilder
     index_builder.index_populate(index_hash)
   end
 
-  # Constructor method for IndexBuilder object. The given Array of samples and
-  # mismatches_max are saved as an instance variable.
+  # Internal: Constructor method for IndexBuilder object. The given Array of
+  # samples and mismatches_max are saved as an instance variable.
   #
   # samples        - Array of Sample objects.
   # mismatches_max - Integer denoting the maximum number of misses allowed in
@@ -66,7 +66,7 @@ class IndexBuilder
     @mismatches_max = mismatches_max
   end
 
-  # Method to initialize the index. If @mismatches_max is <= then
+  # Internal: Method to initialize the index. If @mismatches_max is <= then
   # GoogleHashSparseLongToInt is used else GoogleHashDenseLongToInt due to
   # memory and performance.
   #
@@ -81,7 +81,7 @@ class IndexBuilder
     index_hash
   end
 
-  # Method to populate the index.
+  # Internal: Method to populate the index.
   #
   # index_hash - Google Hash with initialized index.
   #
@@ -105,8 +105,8 @@ class IndexBuilder
 
   private
 
-  # Method to check if a index key already exists in the index, and if so an
-  # exception is raised.
+  # Internal: Method to check if a index key already exists in the index, and
+  # if so an exception is raised.
   #
   # index_hash - Google Hash with index
   # key        - Integer from Google Hash's #hash method
@@ -122,9 +122,9 @@ class IndexBuilder
          exists for sample id: #{@samples[index_hash[key]].id} and #{sample.id}"
   end
 
-  # Method that for each word in a given Array of word permutates each word a
-  # given number (permuate) of times using a given alphabet, such that an Array
-  # of words with all possible combinations is returned.
+  # Internal: Method that for each word in a given Array of word permutates
+  # each word a given number (permuate) of times using a given alphabet, such
+  # that an Array of words with all possible combinations is returned.
   #
   # list     - Array of words (Strings) to permutate.
   # permuate - Number of permutations (Integer).
@@ -151,8 +151,8 @@ class IndexBuilder
     list
   end
 
-  # Method that permutates a given word using a given alphabet, such that an
-  # Array of words with all possible combinations is returned.
+  # Internal: Method that permutates a given word using a given alphabet, such
+  # that an Array of words with all possible combinations is returned.
   #
   # word     - String with word to permutate.
   # alphabet - String with alphabet used for permutation.
