@@ -29,6 +29,14 @@ require 'data_io'
 
 # Class containing methods for demultiplexing MiSeq sequences.
 class Demultiplexer
+  DEFAULT = { verbose:        false,
+              mismatches_max: 0,
+              revcomp_index1: false,
+              revcomp_index2: false,
+              scores_min:     16,
+              scores_mean:    16
+            }
+
   attr_reader :status
 
   # Public: Class method to run demultiplexing of MiSeq sequences.
@@ -61,6 +69,7 @@ class Demultiplexer
   #
   # Returns Demultiplexer object
   def self.run(fastq_files, options)
+    options       = DEFAULT.merge(options)
     log_file      = File.join(options[:output_dir], 'Demultiplex.log')
     demultiplexer = new(fastq_files, options)
     Screen.clear if options[:verbose]
@@ -150,7 +159,9 @@ class Demultiplexer
   #
   # Returns nothing.
   def match_index(ios_out, index1, index2, read1, read2)
-    if (sample_id = @index_hash["#{index1.seq}#{index2.seq}".hash])
+    key = "#{index1.seq.upcase}#{index2.seq.upcase}".hash
+
+    if (sample_id = @index_hash[key])
       write_match(ios_out, sample_id, read1, read2)
     else
       write_undetermined(ios_out, index1, index2, read1, read2)
