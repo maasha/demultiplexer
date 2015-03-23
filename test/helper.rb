@@ -27,6 +27,7 @@ require 'tempfile'
 require 'demultiplexer'
 require 'test/unit'
 
+# Adding stream capture methods.
 module Kernel
   def capture_stdout
     out = StringIO.new
@@ -47,6 +48,7 @@ module Kernel
   end
 end
 
+# Adding custom test class method to TestCase.
 class Test::Unit::TestCase
   def self.test(desc, &impl)
     define_method("test #{desc}", &impl)
