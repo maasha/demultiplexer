@@ -25,8 +25,8 @@
 class Status
   attr_accessor :count, :match, :undetermined, :index1_bad_mean,
                 :index2_bad_mean, :index1_bad_min, :index2_bad_min
-  # Method to initialize a Status object, which contains the following instance
-  # variables initialized to 0:
+  # Internal: Constructor method to initialize a Status object, which contains
+  # the following instance variables initialized to 0:
   #
   #   @count           - Number or reads.
   #   @match           - Number of reads found in index.
@@ -36,13 +36,16 @@ class Status
   #   @index1_bad_min  - Number of reads dropped due to bad min in index1.
   #   @index2_bad_min  - Number of reads dropped due to bad min in index2.
   #
+  # samples - Array of Sample objects.
+  #
   # Examples
   #
-  #   Status.new
+  #   Status.new(samples)
   #   # => <Status>
   #
   # Returns a Status object.
-  def initialize
+  def initialize(samples)
+    @samples         = samples
     @count           = 0
     @match           = 0
     @undetermined    = 0
@@ -53,8 +56,9 @@ class Status
     @time_start      = Time.now
   end
 
-  # Method to format a String from a Status object. This is done by adding the
-  # relevant instance variables to a Hash and return this as an YAML String.
+  # Internal: Method to format a String from a Status object. This is done by
+  # adding the relevant instance variables to a Hash and return this as an YAML
+  # String.
   #
   # Returns a YAML String.
   def to_s
@@ -66,36 +70,59 @@ class Status
       index2_bad_mean:      @index2_bad_mean,
       index1_bad_min:       @index1_bad_min,
       index2_bad_min:       @index2_bad_min,
-      time:                 time }.to_yaml
+      sample_ids:           @samples.map(&:id),
+      index1:               uniq_index1,
+      index2:               uniq_index2,
+      time_elapsed:         time_elapsed }.to_yaml
   end
 
-  # Method that calculate the percentage of undetermined reads.
+  # Internal: Method to save stats to the log file 'Demultiplex.log' in the
+  # output directory.
+  #
+  # Returns nothing.
+  def save(file)
+    File.open(file, 'w') do |ios|
+      ios.puts self
+    end
+  end
+
+  private
+
+  # Internal: Method that calculate the percentage of undetermined reads.
   #
   # Returns a Float with the percentage of undetermined reads.
   def undetermined_percent
+    return 0.0 if @count == 0
+
     (100 * @undetermined / @count.to_f).round(1)
   end
 
-  # Method that calculates the elapsed time and formats a nice Time String.
+  # Internal: Method that calculates the elapsed time and formats a nice Time
+  # String.
   #
   # Returns String with elapsed time.
-  def time
+  def time_elapsed
     time_elapsed = Time.now - @time_start
     (Time.mktime(0) + time_elapsed).strftime('%H:%M:%S')
   end
 
-  # Method to save stats to the log file 'Demultiplex.log' in the output
-  # directory.
+  # Internal: Method that iterates over @samples and compiles a sorted Array
+  # with all unique index1 sequences.
   #
-  # Returns nothing.
-  def save(file)
-    @stats[:sample_id] = @samples.map(&:id)
+  # Returns Array with uniq index1 sequences.
+  def uniq_index1
+    @samples.each_with_object(SortedSet.new) do |e, a|
+      a << e.index1
+    end.to_a
+  end
 
-    @stats[:index1] = uniq_index1
-    @stats[:index2] = uniq_index2
-
-    File.open(file, 'w') do |ios|
-      ios.puts @status
-    end
+  # Internal: Method that iterates over @samples and compiles a sorted Array
+  # with all unique index2 sequences.
+  #
+  # Returns Array with uniq index2 sequences.
+  def uniq_index2
+    @samples.each_with_object(SortedSet.new) do |e, a|
+      a << e.index2
+    end.to_a
   end
 end

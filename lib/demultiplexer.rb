@@ -22,6 +22,7 @@
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
 require 'google_hash'
+require 'status'
 require 'sample_reader'
 require 'index_builder'
 
@@ -99,7 +100,7 @@ class Demultiplexer
     @index_hash   = IndexBuilder.build(@samples, options[:mismatches_max])
     @data_io      = DataIO.new(@samples, fastq_files, options[:compress],
                                options[:output_dir])
-    @status       = Status.new
+    @status       = Status.new(@samples)
   end
 
   # Method to demultiplex reads according the index. This is done by
@@ -243,25 +244,5 @@ class Demultiplexer
     end
 
     true
-  end
-
-  # Method that iterates over @samples and compiles a sorted Array with all
-  # unique index1 sequences.
-  #
-  # Returns Array with uniq index1 sequences.
-  def uniq_index1
-    @status.index1 = @samples.each_with_object(SortedSet.new) do |a, e|
-      a << e.index1
-    end.to_a
-  end
-
-  # Method that iterates over @samples and compiles a sorted Array with all
-  # unique index2 sequences.
-  #
-  # Returns Array with uniq index2 sequences.
-  def uniq_index2
-    @status.index2 = @samples.each_with_object(SortedSet.new) do |a, e|
-      a << e.index2
-    end.to_a
   end
 end
