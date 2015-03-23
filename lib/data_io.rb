@@ -42,11 +42,76 @@ class DataIO
     @suffix1         = extract_suffix(fastq_files, '_R1_')
     @suffix2         = extract_suffix(fastq_files, '_R2_')
     @input_files     = identify_input_files(fastq_files)
-    @undetermined    = @samples.size + 1
+    @undetermined    = @samples.size
     @output_file_ios = nil
   end
 
-  # Method that extracts the Sample, Lane, Region information from given files.
+  # Internal: Method that opens the @input_files for reading.
+  #
+  # input_files - Array with input file paths.
+  #
+  # Returns an Array with IO objects (file handles).
+  def open_input_files
+    @input_file_ios = []
+
+    @input_files.each do |input_file|
+      @input_file_ios << BioPieces::Fastq.open(input_file)
+    end
+
+    yield self
+  ensure
+    close_input_files
+  end
+
+  # Internal: Method that opens the output files for writing.
+  #
+  # Yields a Hash with an incrementing index as keys, and a tuple of file
+  # handles as values.
+  def open_output_files
+    @output_file_ios = {}
+    comp             = @compress
+
+    @output_file_ios.merge!(open_output_files_samples(comp))
+    @output_file_ios.merge!(open_output_files_undet(comp))
+
+    yield self
+  ensure
+    close_output_files
+  end
+
+  # Internal: Method that reads a Seq entry from each of the file handles in
+  # the @input_file_ios Array. Iteration stops when no more Seq entries are
+  # found.
+  #
+  # Yields an Array with 4 Seq objects.
+  #
+  # Returns nothing
+  def each
+    loop do
+      entries = @input_file_ios.each_with_object([]) do |e, a|
+        a << e.next_entry
+      end
+
+      break if entries.compact.size != 4
+
+      yield entries
+    end
+  end
+
+  # Internal: Getter method that returns a tuple of file handles from 
+  # @output_file_ios when given a sample index key.
+  #
+  # key - Sample index Integer key used for lookup.
+  #
+  # Returns Array with a tuple of IO objects.
+  def [](key)
+    @output_file_ios[key]
+  end
+
+  private
+
+  # Internal: Method that extracts the Sample, Lane, Region information from
+  # given files.
   #
   # files   - Array with FASTQ file names as Strings.
   # pattern - String with pattern to use for matching file names.
@@ -63,7 +128,7 @@ class DataIO
     hits = files.grep(Regexp.new(pattern))
 
     unless hits.size == 1
-      fail DataIOError, "Expecting exactly 1 hit but got: #{hits.join(', ')}"
+      fail DataIOError, "Expecting exactly 1 hit but got: #{hits.size}"
     end
 
     if hits.first =~ /.+(_S\d_L\d{3}_R[12]_\d{3}).+$/
@@ -75,7 +140,7 @@ class DataIO
     append_suffix(slr)
   end
 
-  # Method that appends a file suffix to a given Sample, Lane, Region
+  # Internal: Method that appends a file suffix to a given Sample, Lane, Region
   # information String based on the @options[:compress] option. The
   # file suffix can be either ".fastq.gz", ".fastq.bz2", or ".fastq".
   #
@@ -100,14 +165,15 @@ class DataIO
     slr
   end
 
-  # Method identify the different input files from a given Array of FASTQ files.
-  # The forward index file contains a _I1_, the reverse index file contains a
-  # _I2_, the forward read file contains a _R1_ and finally, the reverse read
-  # file contain a _R2_.
+  # Internal: Method identify the different input files from a given Array of
+  # FASTQ files. The forward index file contains a _I1_, the reverse index file
+  # contains a _I2_, the forward read file contains a _R1_ and finally, the
+  # reverse read file contain a _R2_.
   #
   # fastq_files - Array with FASTQ files (Strings).
   #
   # Returns an Array with input files (Strings).
+  # Raises unless 4 input_files are found.
   def identify_input_files(fastq_files)
     input_files = []
 
@@ -116,82 +182,15 @@ class DataIO
     input_files << fastq_files.grep(/_R1_/).first
     input_files << fastq_files.grep(/_R2_/).first
 
+    unless input_files.compact.size == 4
+      fail DataIOError, "Expecting exactly 4 input_files but got: " \
+                        "#{input_files.compact.size}"
+    end
+
     input_files
   end
 
-  # Method that opens the @input_files for reading.
-  #
-  # input_files - Array with input file paths.
-  #
-  # Returns an Array with IO objects (file handles).
-  def open_input_files
-    @input_file_ios = []
-
-    @input_files.each do |input_file|
-      @input_file_ios << BioPieces::Fastq.open(input_file)
-    end
-
-    yield self
-  ensure
-    close_input_files
-  end
-
-  # Method that closes open input files.
-  #
-  # Returns nothing.
-  def close_input_files
-    @input_file_ios.map(&:close)
-  end
-
-  # Method that reads a Seq entry from each of the file handles in the
-  # @input_file_ios Array. Iteration stops when no more Seq entries are found.
-  #
-  # Yields an Array with 4 Seq objects.
-  #
-  # Returns nothing
-  def each
-    loop do
-      entries = @input_file_ios.each_with_object([]) do |e, a|
-        a << e.next_entry
-      end
-
-      break if entries.compact.size != 4
-
-      yield entries
-    end
-  end
-
-  # Method that opens the output files for writing.
-  #
-  # Yeilds a Hash with an incrementing index as keys, and a tuple of file
-  # handles as values.
-  def open_output_files
-    @output_file_ios = {}
-    comp             = @compress
-
-    @output_file_ios.merge!(open_output_files_samples(comp))
-    @output_file_ios.merge!(open_output_files_undet(comp))
-
-    yield self
-  ensure
-    close_output_files
-  end
-
-  def close_output_files
-    @output_file_ios.each_value { |value| value.map(&:close) }
-  end
-
-  # Getter method that returns a tuple of file handles from @output_file_ios
-  # when given a key.
-  #
-  # key - Key used to lookup
-  #
-  # Returns Array with a tuple of IO objects.
-  def [](key)
-    @output_file_ios[key]
-  end
-
-  # Method that opens the sample output files for writing.
+  # Internal: Method that opens the sample output files for writing.
   #
   # comp - Symbol with type of output compression.
   #
@@ -211,7 +210,7 @@ class DataIO
     output_file_ios
   end
 
-  # Method that opens the undertermined output files for writing.
+  # Internal: Method that opens the undertermined output files for writing.
   #
   # comp - Symbol with type of output compression.
   #
@@ -226,5 +225,19 @@ class DataIO
     output_file_ios[@undetermined] = [io_forward, io_reverse]
 
     output_file_ios
+  end
+
+  # Internal: Method that closes open input files.
+  #
+  # Returns nothing.
+  def close_input_files
+    @input_file_ios.map(&:close)
+  end
+
+  # Internal: Method that closes the file handles stored in @output_file_ios.
+  #
+  # Returns nothing.
+  def close_output_files
+    @output_file_ios.each_value { |value| value.map(&:close) }
   end
 end

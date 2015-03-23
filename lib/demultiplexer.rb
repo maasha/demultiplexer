@@ -69,7 +69,7 @@ class Demultiplexer
     demultiplexer.status.save(log_file)
   end
 
-  # Constructor method for Demultiplexer object.
+  # Internal: Constructor method for Demultiplexer object.
   #
   # fastq_files - Array with paths to FASTQ files.
   # options     - Options Hash.
@@ -97,14 +97,14 @@ class Demultiplexer
     @samples      = SampleReader.read(options[:samples_file],
                                       options[:revcomp_index1],
                                       options[:revcomp_index2])
-    @undetermined = @samples.size + 1
+    @undetermined = @samples.size
     @index_hash   = IndexBuilder.build(@samples, options[:mismatches_max])
     @data_io      = DataIO.new(@samples, fastq_files, options[:compress],
                                options[:output_dir])
     @status       = Status.new(@samples)
   end
 
-  # Method to demultiplex reads according the index. This is done by
+  # Internal: Method to demultiplex reads according the index. This is done by
   # simultaniously read-opening all input files (forward and reverse index
   # files and forward and reverse read files) and read one entry from each.
   # Such four entries we call a set of entries. If the quality scores from
@@ -136,11 +136,11 @@ class Demultiplexer
 
   private
 
-  # Method that matches the combined index1 and index2 sequences against the
-  # search index. In case of a match the reads are written to file according to
-  # the information in the search index, otherwise the reads will have thier
-  # names appended with the index sequences and they will be written to the
-  # Undetermined files.
+  # Internal: Method that matches the combined index1 and index2 sequences
+  # against the search index. In case of a match the reads are written to file
+  # according to the information in the search index, otherwise the reads will
+  # have thier names appended with the index sequences and they will be written
+  # to the Undetermined files.
   #
   # ios_out - DataIO object with an accessor method for file output handles.
   # index1  - Seq object with index1.
@@ -157,8 +157,8 @@ class Demultiplexer
     end
   end
 
-  # Method that writes a index match to file according to the information in
-  # the search index.
+  # Internal: Method that writes a index match to file according to the
+  # information in the search index.
   #
   # ios_out - DataIO object with an accessor method for file output handles.
   # read1   - Seq object with read1.
@@ -173,8 +173,8 @@ class Demultiplexer
     io_reverse.puts read2.to_fastq
   end
 
-  # Method that appends the read names with the index sequences and writes
-  # the reads to the Undetermined files.
+  # Internal: Method that appends the read names with the index sequences and
+  # writes the reads to the Undetermined files.
   #
   # ios_out - DataIO object with an accessor method for file output handles.
   # index1  - Seq object with index1.
@@ -193,7 +193,7 @@ class Demultiplexer
     io_reverse.puts read2.to_fastq
   end
 
-  # Method to check the quality scores of the given indexes.
+  # Internal: Method to check the quality scores of the given indexes.
   # If the mean score is higher than @options[:scores_mean] or
   # if the min score is higher than @options[:scores_min] then
   # the indexes are OK.
@@ -207,7 +207,7 @@ class Demultiplexer
       index_qual_min_ok?(index1, index2)
   end
 
-  # Method to check the mean quality scores of the given indexes.
+  # Internal: Method to check the mean quality scores of the given indexes.
   # If the mean score is higher than @options[:scores_mean] the
   # indexes are OK.
   #
@@ -227,7 +227,7 @@ class Demultiplexer
     true
   end
 
-  # Method to check the min quality scores of the given indexes.
+  # Internal: Method to check the min quality scores of the given indexes.
   # If the min score is higher than @options[:scores_min] the
   # indexes are OK.
   #
