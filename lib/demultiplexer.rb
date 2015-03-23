@@ -21,6 +21,8 @@
 #                                                                              #
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
+require 'sample_reader'
+
 # Class containing methods for demultiplexing MiSeq sequences.
 class Demultiplexer
   attr_reader :status

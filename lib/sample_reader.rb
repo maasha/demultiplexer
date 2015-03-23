@@ -21,11 +21,19 @@
 #                                                                              #
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
+require 'csv'
+require 'set'
+require 'biopieces'
+
+# Class for all SampleReader errors.
+SampleReaderError = Class.new(StandardError)
+
 # Class containing methods for reading and checking sample information.
 class SampleReader
-  # Class method that reads sample information from a samples file, which
-  # consists of ASCII text in three tab separated columns: The first column is
-  # the sample_id, the second column is index1 and the third column is index2.
+  # Public: Class method that reads sample information from a samples file,
+  # which consists of ASCII text in three tab separated columns: The first
+  # column is the sample_id, the second column is index1 and the third column is
+  # index2.
   #
   # If revcomp1 or revcomp2 is set then index1 and index2 are
   # reverse-complemented accordingly.
@@ -82,8 +90,8 @@ class SampleReader
     errors.push(*samples_check_uniq_id(samples))
 
     unless errors.empty?
-      pp errors
-      fail 'errors found in sample file.'
+      warn errors
+      fail SampleReaderError, 'errors found in sample file.'
     end
 
     samples
@@ -110,6 +118,8 @@ class SampleReader
     samples = []
 
     CSV.read(file, col_sep: "\t").each do |id, index1, index2|
+      next if id[0] == '#'
+
       samples << Sample.new(id, index1, index2)
     end
 
@@ -194,5 +204,17 @@ class SampleReader
   #     # => <Sample>
   #
   # Returns Sample object.
-  Sample = Struct.new(:id, :index1, :index2)
+  Sample = Struct.new(:id, :index1, :index2) do
+    # Method that returns a String representaion of a Sample object.
+    #
+    # Examples
+    #
+    #   Sample.to_s
+    #     # => "test\tATCG\tTCGA"
+    #
+    # Returns a String with the values joined by "\t".
+    def to_s
+      [id, index1, index2].join("\t")
+    end
+  end
 end
