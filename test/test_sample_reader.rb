@@ -5,8 +5,6 @@ require 'test/helper'
 
 # Class for testing SampleReader.
 class TestSampleReader < Test::Unit::TestCase
-  require 'tempfile'
-
   DATA1 = <<-DATA.gsub(/^\s+\|/, '')
             |#ID\tIndex1\tIndex2
             |A\tATCG\tTCCG
