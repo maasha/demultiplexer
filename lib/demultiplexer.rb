@@ -21,7 +21,9 @@
 #                                                                              #
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
+require 'google_hash'
 require 'sample_reader'
+require 'index_builder'
 
 # Class containing methods for demultiplexing MiSeq sequences.
 class Demultiplexer

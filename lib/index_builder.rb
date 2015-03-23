@@ -21,9 +21,17 @@
 #                                                                              #
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
+# Class for IndexBuilder errors.
+IndexBuilderError = Class.new(StandardError)
+
 # Class containing methods for building an search index.
 class IndexBuilder
-  # Class method that build a search index from a given Array of samples.
+  # Public: Class method that build a search index from a given Array of
+  # samples. The index consists of a Google Hash, which don't have Ruby's
+  # garbage collection and therefore is much more efficient. The Hash keys
+  # consists of index1 and index2 concatenated, and furthermore, if
+  # mismatches_max is given index1, and index2 are permutated accordingly.
+  # The Hash values are the sample number.
   #
   # samples - Array of samples (Sample objects with id, index1 and index2).
   #
@@ -32,7 +40,8 @@ class IndexBuilder
   #   IndexBuilder.build(samples)
   #     # => <Google Hash>
   #
-  # Returns a Google Hash where the key is the index and the value is the TODO
+  # Returns a Google Hash where the key is the index and the value is sample
+  # number.
   def self.build(samples, mismatches_max)
     index_builder = new(samples, mismatches_max)
     index_hash    = index_builder.index_init
@@ -82,12 +91,10 @@ class IndexBuilder
       index_list1 = permutate([sample.index1], @mismatches_max)
       index_list2 = permutate([sample.index2], @mismatches_max)
 
-      # index_check_list_sizes(index_list1, index_list2)
-
       index_list1.product(index_list2).each do |index1, index2|
         key = "#{index1}#{index2}".hash
 
-        index_check_existing(index_hash, key)
+        index_check_existing(index_hash, key, sample, index1, index2)
 
         index_hash[key] = i
       end
@@ -98,32 +105,21 @@ class IndexBuilder
 
   private
 
-  # Method to check if two index lists differ in size, if so an exception is
-  # raised.
-  #
-  # index_list1 - Array with index1
-  # index_list2 - Array with index2
-  #
-  # Returns nothing.
-  def index_check_list_sizes(index_list1, index_list2)
-    return if index_list1.size == index_list2.size
-
-    fail "Permutated list sizes differ: \
-    #{index_list1.size} != #{index_list2.size}"
-  end
-
   # Method to check if a index key already exists in the index, and if so an
   # exception is raised.
   #
   # index_hash - Google Hash with index
   # key        - Integer from Google Hash's #hash method
+  # sample     - Sample object whos index to check.
+  # index1     - String with index1 sequence.
+  # index2     - String with index2 sequence.
   #
   # Returns nothing.
-  def index_check_existing(index_hash, key)
+  def index_check_existing(index_hash, key, sample, index1, index2)
     return unless index_hash[key]
 
-    fail "Index combo of #{index1} and #{index2} already exists for \
-         sample id: #{@samples[index_hash[key]].id} and #{sample.id}"
+    fail IndexBuilderError, "Index combo of #{index1} and #{index2} already \
+         exists for sample id: #{@samples[index_hash[key]].id} and #{sample.id}"
   end
 
   # Method that for each word in a given Array of word permutates each word a
