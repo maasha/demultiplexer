@@ -117,7 +117,7 @@ class SampleReader
   def samples_read(file)
     samples = []
 
-    CSV.read(file, col_sep: "\t").each do |id, index1, index2|
+    CSV.read(file, col_sep: ' ').each do |id, index1, index2|
       next if id[0] == '#'
 
       fail SampleReaderError, "Id not found in file: #{file}" if id.nil?
