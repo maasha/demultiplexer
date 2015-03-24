@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.homepage          = 'http://github.com/maasha/demultiplexer'
   s.license           = 'GPL2'
   s.rubygems_version  = '2.0.0'
+  s.executables       << 'demultiplexer'
   s.files             = `git ls-files`.split("\n")
   s.test_files        = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.require_paths     = ['lib']
