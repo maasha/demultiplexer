@@ -70,9 +70,6 @@ class Status
       index2_bad_mean:      @index2_bad_mean,
       index1_bad_min:       @index1_bad_min,
       index2_bad_min:       @index2_bad_min,
-      sample_ids:           @samples.map(&:id),
-      index1:               uniq_index1,
-      index2:               uniq_index2,
       time_elapsed:         time_elapsed }.to_yaml
   end
 
@@ -81,8 +78,23 @@ class Status
   #
   # Returns nothing.
   def save(file)
+    status = {
+      count:                @count,
+      match:                @match,
+      undetermined:         @undetermined,
+      undetermined_percent: undetermined_percent,
+      index1_bad_mean:      @index1_bad_mean,
+      index2_bad_mean:      @index2_bad_mean,
+      index1_bad_min:       @index1_bad_min,
+      index2_bad_min:       @index2_bad_min,
+      sample_ids:           @samples.map(&:id),
+      index1:               uniq_index1,
+      index2:               uniq_index2,
+      time_elapsed:         time_elapsed
+    }
+
     File.open(file, 'w') do |ios|
-      ios.puts self
+      ios.puts status.to_yaml
     end
   end
 

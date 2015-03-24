@@ -26,6 +26,7 @@ require 'status'
 require 'sample_reader'
 require 'index_builder'
 require 'data_io'
+require 'screen'
 
 # Class containing methods for demultiplexing MiSeq sequences.
 class Demultiplexer
@@ -130,8 +131,10 @@ class Demultiplexer
       @data_io.open_output_files do |ios_out|
         ios_in.each do |index1, index2, read1, read2|
           @status.count += 2
-          puts(@status) if @options[:verbose] &&
-                           (@status.count % 1_000) == 0
+          if @options[:verbose] &&  (@status.count % 1_000) == 0
+            Screen.reset
+            puts @status
+          end
 
           next unless index_qual_ok?(index1, index2)
 
