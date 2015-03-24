@@ -89,54 +89,55 @@ options = {}
 OptionParser.new do |opts|
   opts.banner = USAGE
 
-  opts.on('-h', '--help', 'Display this screen') do
+  opts.on('-h', '--help', 'Display this screen.') do
     $stderr.puts opts
     exit
   end
 
-  opts.on('-s', '--samples_file <file>', String, 'Path to samples file') do |o|
+  opts.on('-s', '--samples_file <file>', String, 'Path to samples file.') do |o|
     options[:samples_file] = o
   end
 
   opts.on('-m', '--mismatches_max <uint>', Integer, 'Maximum mismatches_max ',
-          "allowed (default=#{DEFAULT_MISMATCHES})") do |o|
+          "allowed (default=#{DEFAULT_MISMATCHES}).") do |o|
     options[:mismatches_max] = o
   end
 
-  opts.on('--revcomp_index1', 'Reverse complement index1') do |o|
+  opts.on('--revcomp_index1', 'Reverse complement index1.') do |o|
     options[:revcomp_index1] = o
   end
 
-  opts.on('--revcomp_index2', 'Reverse complement index2') do |o|
+  opts.on('--revcomp_index2', 'Reverse complement index2.') do |o|
     options[:revcomp_index2] = o
   end
 
   opts.on('--scores_min <uint>', Integer, 'Drop reads if a single position in ',
           'the index have a quality score ',
-          'below scores_min (default= ' \
-          "#{DEFAULT_SCORE_MIN})") do |o|
+          'below scores_min (default=' \
+          "#{DEFAULT_SCORE_MIN}).") do |o|
     options[:scores_min] = o
   end
 
   opts.on('--scores_mean <uint>', Integer, 'Drop reads if the mean index',
           'quality score is below ',
-          'scores_mean (default= ' \
-          "#{DEFAULT_SCORE_MEAN})") do |o|
+          'scores_mean (default=' \
+          "#{DEFAULT_SCORE_MEAN}).") do |o|
     options[:scores_mean] = o
   end
 
-  opts.on('-o', '--output_dir <dir>', String, 'Output directory') do |o|
+  opts.on('-o', '--output_dir <dir>', String, 'Output directory' \
+          '(default=<pwd>).') do |o|
     options[:output_dir] = o
   end
 
   opts.on('-c', '--compress <gzip|bzip2>', String, 'Compress output using ' \
           'gzip or bzip2 ',
           '(default=' \
-          '<no compression>)') do |o|
+          '<no compression>).') do |o|
     options[:compress] = o.to_sym
   end
 
-  opts.on('-v', '--verbose', 'Verbose output') do |o|
+  opts.on('-v', '--verbose', 'Verbose output.') do |o|
     options[:verbose] = o
   end
 end.parse!
