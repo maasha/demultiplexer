@@ -73,7 +73,7 @@ USAGE = <<USAGE.gsub(/^\s+\|/, '')
   |
   |Usage: #{File.basename(__FILE__)} [options] <FASTQ files>
   |
-  |Example: #{File.basename(__FILE__)} -m samples.tsv Data*.fastq.gz
+  |Example: #{File.basename(__FILE__)} -s samples.tsv Data*.fastq.gz
   |
   |Options:
 USAGE
