@@ -120,6 +120,10 @@ class SampleReader
     CSV.read(file, col_sep: "\t").each do |id, index1, index2|
       next if id[0] == '#'
 
+      fail SampleReaderError, "Id not found in file: #{file}" if id.nil?
+      fail SampleReaderError, "Index1 not found in file: #{file}" if index1.nil?
+      fail SampleReaderError, "Index2 not found in file: #{file}" if index2.nil?
+
       samples << Sample.new(id, index1.upcase, index2.upcase)
     end
 
